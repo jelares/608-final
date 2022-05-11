@@ -55,15 +55,32 @@ and put into another table called 'processed'.
 
 Data Collected from ESP32 on Post Requests
 -------------------------------------------------------------------------------
-Blah
+The data is collected in the Post request handler, in the request_handler.py function. The data must be posted as form encoded, and contain the following key value pairs:
+
+{'lat': float latitude of data collection point, 'lon': float longitude of data collection point, 'MAC': JSON array of string MAC addresses}.
+
+The server then takes these requests and inserts a single data point, per MAC address in the array, into a production table as mentioned below, along with a timestamp.
 
 Data Processing
 -------------------------------------------------------------------------------
-Blah
+Upon the production tables reaching a certain size, we manually download them onto our machines and run a data processing script on them. Note we do this manually instead of automatically because we do not have permission to
+run processes on the server.
+
+The processing script goes through all production tables, count each data point (unique MAC address) for every distinct (lat, lon, hour) triplet and generates a count value for the triplet. The way the 'hour' quantity is determined is 
+by taking the hour portion of a point's timestamp. Upon the generation of the 96 unique {(lat, lon, hour): count} pairs (24 hours * 4 data collection locations), we update the 96 corresponding points in the 'processed' database table by adding the
+new counts onto the old counts which are already in the processed table (these counts are initialized to zero). What we end up with is a database table named 'processed' with 96 rows of the following form: 
+
+{lat, lon, hour, count}
+
+When the data processing is complete, the database file with the update 'processed' table is re-uploaded to the server manually.
 
 Get Requests
 -------------------------------------------------------------------------------
-Blah
+With the processed data on the server, the GET request simply has to take build the visualization. The visualization consists of a hotspot representation of the population density on campus, placed on a map, for a given hour. The creation of the visualizations, hotspots, and size of the hotspots
+is talked about in the data visualization section. The GET request therefore must take in an hour query parameter in the URL. It then uses this hour parameter to go through the location points and get the counts for those locations parameterized by a given hour. It then turns these data points into
+hotspots for those locations at that hour, and returns the visualization as an html file.
+
+It creates an HTML map file, called cambridge.hmtl, which is them embedded with our visualizations, visualizations.png, and returned from the handler.
 
 
 System Design
@@ -79,6 +96,11 @@ Design Choices
 
 Milestones
 ===============================================================================
+Server and Data Processing Deliverables
+-------------------------------------------------------------------------------
+![Week 1 - Basic GET handler](https://www.youtube.com/watch?v=q8Webixm5Gc)
+![Week 2 - Basic full server](https://www.youtube.com/watch?v=IME2LLdzjcM)
+![Week 3 - Initial data processing](https://www.youtube.com/watch?v=jNFUSzJ026k)
 
 Team Members
 ===============================================================================
